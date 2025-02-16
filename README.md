@@ -15,4 +15,20 @@ This API integrates **Human Design, Astrology, and Numerology** to help users un
 ## Setup  
 1. Clone this repo:  
    ```sh
-   git clone https://github.com/YOUR_USERNAME/pathlet-api.git
+   git clone https://github.com/acidxtone/pathlet-api.git
+
+✅ 3️⃣ Install Required Python Packages
+Run this command in the terminal inside VS Code:
+
+sh
+Copy
+pip install flask python-dotenv requests
+✅ 4️⃣ Run the API Locally
+In the terminal, navigate to your project folder and run:
+
+sh
+Copy
+python app.py
+This will start the Flask server on http://127.0.0.1:5000.
+
+
