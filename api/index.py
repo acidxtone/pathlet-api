@@ -57,20 +57,23 @@ def get_ascendants():
     Returns:
         JSON response with possible ascendants or error
     """
-    data = request.json
-    is_valid, error_message = validate_request_data(data)
-    
-    if not is_valid:
-        return jsonify({"error": error_message}), 400
-    
-    birth_date = data.get("birth_date")
-    birth_location = data.get("birth_location")
-    
-    ascendants = get_possible_ascendants(birth_date, birth_location)
-    return jsonify({
-        "possible_ascendants": ascendants,
-        "instructions": "Review the listed Ascendants and choose the one that resonates most with you."
-    })
+    try:
+        data = request.get_json()
+        is_valid, error_message = validate_request_data(data)
+        
+        if not is_valid:
+            return jsonify({"error": error_message}), 400
+        
+        birth_date = data.get("birth_date")
+        birth_location = data.get("birth_location")
+        
+        ascendants = get_possible_ascendants(birth_date, birth_location)
+        return jsonify({
+            "possible_ascendants": ascendants,
+            "instructions": "Review the listed Ascendants and choose the one that resonates most with you."
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 @app.route('/calculate_all', methods=['POST'])
 def calculate_all():
@@ -80,31 +83,64 @@ def calculate_all():
     Returns:
         JSON response with various insights or error
     """
-    data = request.json
-    is_valid, error_message = validate_request_data(data)
-    
-    if not is_valid:
-        return jsonify({"error": error_message}), 400
-    
-    birth_date = data.get("birth_date")
-    birth_time = data.get("birth_time", "")
-    birth_location = data.get("birth_location")
-    
-    # If no birth time and an ascendant is selected, estimate time
-    if not birth_time and "selected_ascendant" in data:
-        birth_time = assign_birth_time(data["selected_ascendant"])
-    
-    human_design = calculate_human_design(birth_date, birth_time, birth_location)
-    numerology = calculate_numerology(birth_date)
-    
-    return jsonify({
-        "human_design": human_design,
-        "numerology": numerology,
-        "birth_time": birth_time
-    })
+    try:
+        data = request.get_json()
+        is_valid, error_message = validate_request_data(data)
+        
+        if not is_valid:
+            return jsonify({"error": error_message}), 400
+        
+        birth_date = data.get("birth_date")
+        birth_time = data.get("birth_time", "")
+        birth_location = data.get("birth_location")
+        
+        # If no birth time and an ascendant is selected, estimate time
+        if not birth_time and "selected_ascendant" in data:
+            birth_time = assign_birth_time(data["selected_ascendant"])
+        
+        human_design = calculate_human_design(birth_date, birth_time, birth_location)
+        numerology = calculate_numerology(birth_date)
+        
+        return jsonify({
+            "human_design": human_design,
+            "numerology": numerology,
+            "birth_time": birth_time
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 def handler(event, context):
     """
     Vercel serverless function handler
+    
+    Args:
+        event (dict): Serverless event data
+        context (dict): Serverless context
+    
+    Returns:
+        dict: Response from the Flask application
     """
-    return app
+    from flask import request
+    from werkzeug.test import EnvironBuilder
+    from werkzeug.wrappers import Request
+    
+    # Convert Vercel event to Flask request
+    builder = EnvironBuilder(
+        path=event.get('path', '/'),
+        method=event.get('httpMethod', 'GET'),
+        input_stream=event.get('body', ''),
+        headers=event.get('headers', {})
+    )
+    
+    with builder:
+        req = Request(builder.get_environ())
+        response = app.full_dispatch_request()
+        
+    return {
+        'statusCode': response.status_code,
+        'body': response.get_data(as_text=True),
+        'headers': dict(response.headers)
+    }
+
+if __name__ == '__main__':
+    app.run(debug=True)
