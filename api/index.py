@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 import traceback
 import logging
 import json
@@ -22,36 +22,62 @@ dotenv.load_dotenv()
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO, 
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler('vercel_deployment.log')
+    ]
 )
 logger = logging.getLogger(__name__)
+
+# Comprehensive path resolution
+def setup_python_path():
+    try:
+        # Determine absolute paths
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        project_root = os.path.abspath(os.path.join(current_dir, '..'))
+        backend_path = os.path.join(project_root, 'backend')
+        
+        # Log path information
+        logger.info(f"Current Directory: {current_dir}")
+        logger.info(f"Project Root: {project_root}")
+        logger.info(f"Backend Path: {backend_path}")
+        
+        # Verify paths exist
+        if not os.path.exists(project_root):
+            logger.error(f"Project root does not exist: {project_root}")
+        if not os.path.exists(backend_path):
+            logger.error(f"Backend path does not exist: {backend_path}")
+        
+        # Add paths to Python path
+        sys.path.insert(0, project_root)
+        sys.path.insert(0, backend_path)
+        
+        logger.info(f"Updated Python Path: {sys.path}")
+    except Exception as path_error:
+        logger.critical(f"Path resolution error: {path_error}")
+        logger.error(traceback.format_exc())
+
+# Setup paths before any imports
+setup_python_path()
+
+# Import Flask application with error handling
+try:
+    from backend.app import app as application
+except ImportError as import_error:
+    logger.critical(f"Failed to import Flask application: {import_error}")
+    logger.error(traceback.format_exc())
+    application = None
+except Exception as e:
+    logger.critical(f"Unexpected error importing application: {e}")
+    logger.error(traceback.format_exc())
+    application = None
 
 # Verify critical environment variables
 HUGGING_FACE_API_KEY = os.getenv('HUGGING_FACE_API_KEY')
 if not HUGGING_FACE_API_KEY:
     logger.critical("HUGGING_FACE_API_KEY is not set. API functionality may be limited.")
-
-# Comprehensive path debugging
-logger.info(f"Current Working Directory: {os.getcwd()}")
-logger.info(f"Python Path: {sys.path}")
-
-# Add the backend directory to the Python path with comprehensive logging
-try:
-    backend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'backend'))
-    logger.info(f"Attempting to add backend path: {backend_path}")
-    
-    if not os.path.exists(backend_path):
-        logger.error(f"Backend path does not exist: {backend_path}")
-    
-    sys.path.insert(0, backend_path)
-    logger.info(f"Updated Python Path: {sys.path}")
-except Exception as path_error:
-    logger.error(f"Path resolution error: {path_error}")
-    logger.error(traceback.format_exc())
-
-app = Flask(__name__, static_folder='../frontend')
-CORS(app)  # Enable CORS for all routes
 
 # Global error handler
 @app.errorhandler(Exception)
@@ -294,61 +320,69 @@ def home():
         ]
     })
 
-import os
-import sys
-import traceback
-import logging
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
-# Dynamically add project root to Python path
-try:
-    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-    backend_path = os.path.join(project_root, 'backend')
-    
-    sys.path.insert(0, project_root)
-    sys.path.insert(0, backend_path)
-    
-    logger.info(f"Added paths: {project_root}, {backend_path}")
-    logger.info(f"Updated Python Path: {sys.path}")
-except Exception as path_error:
-    logger.error(f"Path resolution error: {path_error}")
-    logger.error(traceback.format_exc())
-
-# Import Flask application
-try:
-    from backend.app import app as application
-except ImportError as import_error:
-    logger.critical(f"Failed to import Flask application: {import_error}")
-    logger.error(traceback.format_exc())
-    application = None
-
 def handler(event, context):
     """
-    Vercel serverless function handler with comprehensive error management
+    Comprehensive Vercel serverless function handler
     """
+    # Log incoming event details
+    logger.info(f"Received event: {json.dumps(event, indent=2)}")
+    
+    # Check application initialization
     if not application:
-        logger.critical("Flask application not initialized")
-        return {
+        error_response = {
             'statusCode': 500,
-            'body': 'Internal Server Error: Application failed to load'
+            'headers': {
+                'Content-Type': 'application/json'
+            },
+            'body': json.dumps({
+                'error': 'Internal Server Error',
+                'message': 'Flask application failed to initialize',
+                'details': 'Check server logs for more information'
+            })
         }
+        logger.critical("Flask application not initialized")
+        return error_response
     
     try:
-        # Optional: Add any serverless-specific request handling
+        # Optional: Add request preprocessing or validation
+        logger.info("Processing request")
+        
+        # For Vercel serverless, we might need to adapt the request
+        if isinstance(event, dict):
+            # Convert Vercel event to a format Flask can understand
+            # This is a placeholder and might need adjustment
+            from flask import Request
+            flask_request = Request(event)
+            
+            # Process the request
+            with application.request_context(flask_request):
+                response = application.full_dispatch_request()
+                
+            return {
+                'statusCode': response.status_code,
+                'headers': dict(response.headers),
+                'body': response.get_data(as_text=True)
+            }
+        
+        # Fallback to default application handling
         return application
+    
     except Exception as e:
         logger.error(f"Serverless handler error: {e}")
         logger.error(traceback.format_exc())
-        return {
+        
+        error_response = {
             'statusCode': 500,
-            'body': f'Internal Server Error: {str(e)}'
+            'headers': {
+                'Content-Type': 'application/json'
+            },
+            'body': json.dumps({
+                'error': 'Internal Server Error',
+                'message': str(e),
+                'traceback': traceback.format_exc()
+            })
         }
+        return error_response
 
 # For local development and testing
 if __name__ == '__main__':

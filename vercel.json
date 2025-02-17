@@ -11,8 +11,13 @@
                 "maxLambdaSize": "15mb",
                 "includeFiles": [
                     "backend/**",
-                    "requirements.txt"
-                ]
+                    "requirements.txt",
+                    "combined_requirements.txt"
+                ],
+                "functions": {
+                    "memory": 3008,
+                    "maxDuration": 60
+                }
             }
         },
         {
