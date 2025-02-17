@@ -61,6 +61,54 @@ pip install -r requirements.txt
 - Create a `.env` file
 - Add necessary API keys and configurations
 
+## Deployment
+
+### Vercel Deployment
+
+1. **Environment Variables**
+   - Set `HUGGING_FACE_API_KEY` in Vercel project settings
+   - Ensure the key is kept secret and not exposed in the codebase
+
+2. **Deployment Steps**
+   ```bash
+   # Install Vercel CLI
+   npm install -g vercel
+
+   # Link project
+   vercel link
+
+   # Set environment variables
+   vercel env add HUGGING_FACE_API_KEY
+   ```
+
+### Local Development
+
+1. **Clone Repository**
+   ```bash
+   git clone https://github.com/acidxtone/pathlet-api.git
+   cd pathlet-api
+   ```
+
+2. **Setup Virtual Environment**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+3. **Install Dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Set Environment Variables**
+   - Create a `.env` file
+   - Add `HUGGING_FACE_API_KEY=your_api_key_here`
+
+5. **Run Application**
+   ```bash
+   python api/index.py
+   ```
+
 ## Running the API
 
 ### Local Development
@@ -72,6 +120,16 @@ flask run
 Supports deployment on:
 - Vercel
 - Hugging Face Spaces
+
+## Security Notes
+- Never commit sensitive API keys to the repository
+- Use environment variables for configuration
+- Rotate API keys periodically
+
+## Troubleshooting
+- Verify all environment variables are correctly set
+- Check Vercel logs for deployment issues
+- Ensure all dependencies are installed
 
 ## Libraries Used
 - Flask
