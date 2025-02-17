@@ -1,108 +1,166 @@
 import re
+import logging
 from datetime import datetime
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO, 
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+class ValidationError(ValueError):
+    """Custom exception for validation errors."""
+    pass
+
+def sanitize_input(input_str):
+    """
+    Sanitize and clean input strings.
+    
+    Args:
+        input_str (str): Input string to sanitize
+    
+    Returns:
+        str: Cleaned input string
+    """
+    if not isinstance(input_str, str):
+        return ''
+    return input_str.strip()
 
 def validate_birth_date(birth_date):
     """
-    Validate birth date format and ensure it's a valid date.
+    Advanced birth date validation with comprehensive checks.
     
     Args:
-        birth_date (str): Date of birth in YYYY-MM-DD format
+        birth_date (str): Date of birth 
     
     Returns:
-        bool: Whether the birth date is valid
+        str: Validated and standardized birth date
+    
+    Raises:
+        ValidationError: If date is invalid
     """
+    birth_date = sanitize_input(birth_date)
+    
+    if not birth_date:
+        raise ValidationError("Birth date cannot be empty")
+    
     try:
-        datetime.strptime(birth_date, '%Y-%m-%d')
-        return True
-    except ValueError:
-        return False
+        # Try multiple date formats
+        date_formats = ['%Y-%m-%d', '%m/%d/%Y', '%d-%m-%Y']
+        for date_format in date_formats:
+            try:
+                parsed_date = datetime.strptime(birth_date, date_format)
+                # Validate age range (between 0 and 120 years)
+                age = (datetime.now() - parsed_date).days / 365.25
+                if 0 <= age <= 120:
+                    return parsed_date.strftime('%Y-%m-%d')
+            except ValueError:
+                continue
+        
+        raise ValidationError(f"Invalid birth date format. Use YYYY-MM-DD. Received: {birth_date}")
+    
+    except Exception as e:
+        logger.error(f"Birth date validation error: {e}")
+        raise ValidationError(f"Invalid birth date: {e}")
 
 def validate_birth_time(birth_time):
     """
-    Validate birth time format with multiple input styles.
-    
-    Supports formats:
-    - HH:MM AM/PM (12-hour)
-    - HH:MM (24-hour)
-    - HH:MM:SS
+    Advanced birth time validation with multiple formats and comprehensive checks.
     
     Args:
-        birth_time (str): Time of birth 
+        birth_time (str): Time of birth
     
     Returns:
-        str: Standardized time format or raises ValueError
+        str: Validated and standardized time
+    
+    Raises:
+        ValidationError: If time is invalid
     """
+    birth_time = sanitize_input(birth_time)
+    
     if not birth_time:
-        return ""  # Allow empty time
+        return ''  # Optional time
     
-    # Remove any whitespace
-    birth_time = birth_time.strip()
-    
-    # Patterns to match different time formats
+    # Time format patterns
     time_patterns = [
-        r'^(0[1-9]|1[0-2]):[0-5][0-9] (AM|PM)$',  # 12-hour with AM/PM
-        r'^([01][0-9]|2[0-3]):[0-5][0-9]$',       # 24-hour
-        r'^([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$'  # With seconds
+        ('%I:%M %p', r'^\d{1,2}:\d{2}\s*[APM]{2}$'),  # 12-hour with AM/PM
+        ('%H:%M', r'^\d{1,2}:\d{2}$'),               # 24-hour
+        ('%H:%M:%S', r'^\d{1,2}:\d{2}:\d{2}$')       # With seconds
     ]
     
-    for pattern in time_patterns:
-        if re.match(pattern, birth_time):
-            return birth_time
+    for time_format, pattern in time_patterns:
+        if re.match(pattern, birth_time, re.IGNORECASE):
+            try:
+                # Normalize time
+                parsed_time = datetime.strptime(birth_time.upper(), time_format)
+                return parsed_time.strftime('%I:%M %p')  # Standardize to 12-hour AM/PM
+            except ValueError:
+                continue
     
-    # If no match, try to parse and standardize
-    try:
-        # Try parsing with multiple formats
-        parsed_time = datetime.strptime(birth_time, '%I:%M %p')
-        return parsed_time.strftime('%I:%M %p')
-    except ValueError:
-        try:
-            parsed_time = datetime.strptime(birth_time, '%H:%M')
-            return parsed_time.strftime('%H:%M')
-        except ValueError:
-            raise ValueError("Invalid birth time format. Use HH:MM, HH:MM AM/PM")
+    logger.warning(f"Invalid time format: {birth_time}")
+    raise ValidationError(f"Invalid time format. Use HH:MM or HH:MM AM/PM. Received: {birth_time}")
 
 def validate_birth_location(location):
     """
-    Validate birth location.
+    Advanced location validation with comprehensive checks.
     
     Args:
         location (str): Location of birth
     
     Returns:
-        bool: Whether the location is valid
+        str: Validated location
+    
+    Raises:
+        ValidationError: If location is invalid
     """
-    return bool(location and len(location.strip()) > 2)
+    location = sanitize_input(location)
+    
+    if not location:
+        raise ValidationError("Birth location cannot be empty")
+    
+    # Basic location validation
+    if len(location) < 2:
+        raise ValidationError(f"Location too short: {location}")
+    
+    # Optional: Add more sophisticated location validation
+    # For example, check against a list of known locations or use geocoding
+    
+    return location
 
 def validate_request_data(data):
     """
-    Validate complete request data for calculations.
+    Comprehensive request data validation.
     
     Args:
         data (dict): Request data containing birth details
     
     Returns:
-        tuple: (is_valid, error_message)
+        dict: Validated and cleaned request data
+    
+    Raises:
+        ValidationError: If any validation fails
     """
     if not isinstance(data, dict):
-        return False, "Invalid request data format"
+        raise ValidationError("Invalid request data format. Expected a dictionary.")
     
-    # Birth date validation
-    birth_date = data.get('birth_date', '')
-    if not validate_birth_date(birth_date):
-        return False, f"Invalid birth date: {birth_date}. Use YYYY-MM-DD format"
+    # Validate and clean each field
+    try:
+        validated_data = {
+            'birth_date': validate_birth_date(data.get('birth_date', '')),
+            'birth_time': validate_birth_time(data.get('birth_time', '')),
+            'birth_location': validate_birth_location(data.get('birth_location', ''))
+        }
+        
+        logger.info(f"Request data validated successfully: {validated_data}")
+        return validated_data
     
-    # Birth time validation (optional)
-    birth_time = data.get('birth_time', '')
-    if birth_time:
-        try:
-            validated_time = validate_birth_time(birth_time)
-            data['birth_time'] = validated_time
-        except ValueError as e:
-            return False, str(e)
-    
-    # Birth location validation
-    birth_location = data.get('birth_location', '')
-    if not validate_birth_location(birth_location):
-        return False, f"Invalid birth location: {birth_location}"
-    
-    return True, ""
+    except ValidationError as ve:
+        logger.error(f"Validation Error: {ve}")
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected validation error: {e}")
+        raise ValidationError(f"Validation failed: {e}")
+
+# Expose the custom exception for other modules to use
+__all__ = ['validate_request_data', 'ValidationError']
