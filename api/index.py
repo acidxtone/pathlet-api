@@ -1,11 +1,18 @@
-from flask import Flask, request, jsonify
 import sys
 import os
+import traceback
+import logging
+import json
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Add the backend directory to the Python path
 backend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'backend'))
 sys.path.insert(0, backend_path)
 
+from flask import Flask, request, jsonify
 from backend.services.hugging_face import get_possible_ascendants
 from backend.services.numerology import calculate_numerology
 from backend.services.human_design import calculate_human_design
@@ -111,36 +118,53 @@ def calculate_all():
 
 def handler(event, context):
     """
-    Vercel serverless function handler
+    Comprehensive Vercel serverless function handler with robust error management
     
     Args:
         event (dict): Serverless event data
         context (dict): Serverless context
     
     Returns:
-        dict: Response from the Flask application
+        dict: Standardized response with error handling
     """
-    from flask import request
-    from werkzeug.test import EnvironBuilder
-    from werkzeug.wrappers import Request
-    
-    # Convert Vercel event to Flask request
-    builder = EnvironBuilder(
-        path=event.get('path', '/'),
-        method=event.get('httpMethod', 'GET'),
-        input_stream=event.get('body', ''),
-        headers=event.get('headers', {})
-    )
-    
-    with builder:
-        req = Request(builder.get_environ())
-        response = app.full_dispatch_request()
+    try:
+        logger.info(f"Received event: {event}")
         
-    return {
-        'statusCode': response.status_code,
-        'body': response.get_data(as_text=True),
-        'headers': dict(response.headers)
-    }
+        # Extract request details
+        method = event.get('httpMethod', 'GET')
+        path = event.get('path', '/')
+        body = event.get('body', '{}')
+        
+        # Simulate Flask request context
+        with app.request_context(environ={
+            'REQUEST_METHOD': method,
+            'PATH_INFO': path,
+            'wsgi.input': body
+        }):
+            # Dispatch request through Flask
+            response = app.full_dispatch_request()
+        
+        # Convert Flask response to Vercel response format
+        return {
+            'statusCode': response.status_code,
+            'body': response.get_data(as_text=True),
+            'headers': dict(response.headers)
+        }
+    
+    except Exception as e:
+        # Log full traceback for debugging
+        logger.error(f"Serverless Handler Error: {str(e)}")
+        logger.error(traceback.format_exc())
+        
+        return {
+            'statusCode': 500,
+            'body': json.dumps({
+                'error': 'Internal Server Error',
+                'details': str(e),
+                'traceback': traceback.format_exc()
+            }),
+            'headers': {'Content-Type': 'application/json'}
+        }
 
 if __name__ == '__main__':
     app.run(debug=True)
