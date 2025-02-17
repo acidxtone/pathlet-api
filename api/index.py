@@ -294,11 +294,65 @@ def home():
         ]
     })
 
+import os
+import sys
+import traceback
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# Dynamically add project root to Python path
+try:
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    backend_path = os.path.join(project_root, 'backend')
+    
+    sys.path.insert(0, project_root)
+    sys.path.insert(0, backend_path)
+    
+    logger.info(f"Added paths: {project_root}, {backend_path}")
+    logger.info(f"Updated Python Path: {sys.path}")
+except Exception as path_error:
+    logger.error(f"Path resolution error: {path_error}")
+    logger.error(traceback.format_exc())
+
+# Import Flask application
+try:
+    from backend.app import app as application
+except ImportError as import_error:
+    logger.critical(f"Failed to import Flask application: {import_error}")
+    logger.error(traceback.format_exc())
+    application = None
+
 def handler(event, context):
     """
-    Comprehensive Vercel serverless function handler
+    Vercel serverless function handler with comprehensive error management
     """
-    return app(event, context)
+    if not application:
+        logger.critical("Flask application not initialized")
+        return {
+            'statusCode': 500,
+            'body': 'Internal Server Error: Application failed to load'
+        }
+    
+    try:
+        # Optional: Add any serverless-specific request handling
+        return application
+    except Exception as e:
+        logger.error(f"Serverless handler error: {e}")
+        logger.error(traceback.format_exc())
+        return {
+            'statusCode': 500,
+            'body': f'Internal Server Error: {str(e)}'
+        }
 
+# For local development and testing
 if __name__ == '__main__':
-    app.run(debug=True)
+    if application:
+        application.run(debug=True)
+    else:
+        logger.critical("Cannot start application: Initialization failed")

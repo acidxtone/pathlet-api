@@ -8,7 +8,11 @@
             "use": "@vercel/python",
             "config": {
                 "runtime": "python3.9",
-                "maxLambdaSize": "15mb"
+                "maxLambdaSize": "15mb",
+                "includeFiles": [
+                    "backend/**",
+                    "requirements.txt"
+                ]
             }
         },
         {
@@ -29,7 +33,8 @@
     "env": {
         "HUGGING_FACE_API_KEY": "@hugging_face_api_key",
         "FLASK_ENV": "production",
-        "FLASK_DEBUG": "False"
+        "FLASK_DEBUG": "False",
+        "PYTHONPATH": "backend"
     },
     "github": {
         "silent": true
