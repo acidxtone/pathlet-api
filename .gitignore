@@ -43,3 +43,5 @@ htmlcov/
 # OS Generated Files
 .DS_Store
 Thumbs.db
+
+### HUGGING_FACE_API_KEY=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 ###
