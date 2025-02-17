@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from datetime import datetime
 
 from services.hugging_face import get_possible_ascendants
 from services.numerology import calculate_numerology
@@ -109,6 +110,18 @@ def calculate_all():
         "numerology": numerology,
         "birth_time": birth_time
     })
+
+@app.route('/healthz')
+def health_check():
+    """
+    Render health check endpoint
+    Returns a 200 OK status to indicate the service is running
+    """
+    return jsonify({
+        'status': 'healthy',
+        'message': 'Pathlet API is running',
+        'timestamp': datetime.now().isoformat()
+    }), 200
 
 if __name__ == '__main__':
     app.run(debug=Config.DEBUG)
