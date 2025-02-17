@@ -1,40 +1,95 @@
-# Pathlet API
+# Pathlet API: Personalized Astrological & Numerological Insights
 
 ## Overview
-Pathlet is an advanced API generating personalized insights using Astrology, Numerology, and Human Design.
-
-## Deployment Platforms
-- **Vercel**: Web API Hosting
-- **Hugging Face Spaces**: Alternative Deployment
+Pathlet is an advanced API that provides personalized insights based on astronomical calculations, including Ascendant Signs, Numerology, and Human Design.
 
 ## Features
-- Ascendant Sign Estimation
-- Numerology Calculations
-- Human Design Type Analysis
+- 🌟 Precise Ascendant Sign Calculation
+- 🔢 Advanced Numerology Analysis
+- 🧬 Comprehensive Human Design Typing
 
-## Setup
+## Services
+
+### 1. Ascendant Sign Calculator
+Calculates possible ascendant signs using precise astronomical methods.
+
+**Endpoint**: `/get_ascendants`
+**Method**: POST
+**Payload**:
+```json
+{
+    "birth_date": "YYYY-MM-DD",
+    "birth_location": "City, Country"
+}
+```
+
+### 2. Numerology Calculator
+Provides comprehensive life path analysis with detailed insights.
+
+**Endpoint**: `/calculate_numerology`
+**Method**: POST
+**Payload**:
+```json
+{
+    "birth_date": "YYYY-MM-DD"
+}
+```
+
+### 3. Human Design Calculator
+Determines Human Design type with strategic and personal insights.
+
+**Endpoint**: `/calculate_human_design`
+**Method**: POST
+**Payload**:
+```json
+{
+    "birth_date": "YYYY-MM-DD",
+    "birth_time": "HH:MM AM/PM",  // Optional
+    "birth_location": "City, Country"  // Optional
+}
+```
+
+## Installation
+
+1. Clone the repository
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+3. Set up environment variables:
+- Create a `.env` file
+- Add necessary API keys and configurations
+
+## Running the API
 
 ### Local Development
-1. Clone the repository
-2. Install dependencies: `pip install -r requirements.txt`
-3. Set up environment variables
-4. Run the application: `python backend/app.py`
+```bash
+flask run
+```
 
 ### Deployment
-- **Vercel**: 
-  * Automatically deploys from GitHub
-  * Configure environment variables in Vercel dashboard
-- **Hugging Face Spaces**:
-  * Docker-based deployment
-  * Requires Hugging Face Spaces configuration
+Supports deployment on:
+- Vercel
+- Hugging Face Spaces
 
-## API Endpoints
-- `GET /`: Health check
-- `POST /get_ascendants`: Estimate possible ascendant signs
-- `POST /calculate_all`: Comprehensive personal insights
+## Libraries Used
+- Flask
+- Ephem (Astronomical Calculations)
+- Skyfield
+- NumPy
+- SciPy
 
 ## Contributing
-Please read `CONTRIBUTING.md` for details on our code of conduct and the process for submitting pull requests.
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
 ## License
-This project is licensed under the MIT License.
+MIT License
+
+## Contact
+Developed by the Pathlet Team
+support@pathlet.com

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pathlet: Personal Insights</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #6a5acd;
+            --secondary-color: #9370db;
+            --background-color: #f4f4f8;
+            --text-color: #333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            padding: 40px;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--text-color);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: var(--secondary-color);
+        }
+
+        #results {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .result-section {
+            background-color: var(--background-color);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Pathlet: Personal Insights</h1>
+        
+        <form id="insightsForm">
+            <div class="form-group">
+                <label for="birthDate">Birth Date</label>
+                <input type="date" id="birthDate" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="birthTime">Birth Time (Optional)</label>
+                <input type="time" id="birthTime">
+            </div>
+            
+            <div class="form-group">
+                <label for="birthLocation">Birth Location</label>
+                <input type="text" id="birthLocation" placeholder="City, Country" required>
+            </div>
+            
+            <button type="submit" class="btn">Get My Insights</button>
+        </form>
+
+        <div id="results" style="display: none;">
+            <div id="ascendantResults" class="result-section"></div>
+            <div id="numerologyResults" class="result-section"></div>
+            <div id="humanDesignResults" class="result-section"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('insightsForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const birthDate = document.getElementById('birthDate').value;
+            const birthTime = document.getElementById('birthTime').value;
+            const birthLocation = document.getElementById('birthLocation').value;
+
+            const payload = {
+                birth_date: birthDate,
+                birth_time: birthTime || undefined,
+                birth_location: birthLocation
+            };
+
+            try {
+                // Parallel API calls
+                const [ascendantResponse, numerologyResponse, humanDesignResponse] = await Promise.all([
+                    fetch('/api/get_ascendants', { 
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ birth_date: birthDate, birth_location: birthLocation })
+                    }),
+                    fetch('/api/calculate_numerology', { 
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ birth_date: birthDate })
+                    }),
+                    fetch('/api/calculate_human_design', { 
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    })
+                ]);
+
+                const ascendantData = await ascendantResponse.json();
+                const numerologyData = await numerologyResponse.json();
+                const humanDesignData = await humanDesignResponse.json();
+
+                document.getElementById('ascendantResults').innerHTML = `
+                    <h3>Ascendant Sign</h3>
+                    <p>Possible Signs: ${ascendantData.possible_ascendants.join(', ')}</p>
+                    <p>${ascendantData.description}</p>
+                `;
+
+                document.getElementById('numerologyResults').innerHTML = `
+                    <h3>Numerology Insights</h3>
+                    <p>Life Path Number: ${numerologyData.life_path_number}</p>
+                    <p>${numerologyData.description}</p>
+                `;
+
+                document.getElementById('humanDesignResults').innerHTML = `
+                    <h3>Human Design</h3>
+                    <p>Type: ${humanDesignData.type}</p>
+                    <p>Strategy: ${humanDesignData.strategy}</p>
+                    <p>${humanDesignData.description}</p>
+                `;
+
+                document.getElementById('results').style.display = 'block';
+            } catch (error) {
+                console.error('Error fetching insights:', error);
+                alert('Unable to retrieve insights. Please try again.');
+            }
+        });
+    </script>
+</body>
+</html>

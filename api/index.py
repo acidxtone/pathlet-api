@@ -3,10 +3,22 @@ import os
 import traceback
 import logging
 import json
+from flask import Flask, request, jsonify, send_from_directory
+from flask_cors import CORS
+from werkzeug.exceptions import HTTPException
+from backend.services.hugging_face import get_possible_ascendants
+from backend.services.numerology import calculate_numerology
+from backend.services.human_design import calculate_human_design
+from backend.services.compatibility import calculate_compatibility
+from backend.utils.validators import (
+    validate_birth_date, 
+    validate_birth_time, 
+    validate_birth_location
+)
 
 # Enhanced logging configuration
 logging.basicConfig(
-    level=logging.DEBUG, 
+    level=logging.INFO, 
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
@@ -29,23 +41,8 @@ except Exception as path_error:
     logger.error(f"Path resolution error: {path_error}")
     logger.error(traceback.format_exc())
 
-from flask import Flask, request, jsonify
-from werkzeug.exceptions import HTTPException
-
-# Wrap import in try-except for detailed error tracking
-try:
-    from backend.services.hugging_face import get_possible_ascendants
-    from backend.services.numerology import calculate_numerology
-    from backend.services.human_design import calculate_human_design
-    from backend.utils.validators import validate_request_data, ValidationError
-    logger.info("Successfully imported backend modules")
-except ImportError as import_error:
-    logger.error(f"Import Error: {import_error}")
-    logger.error(f"Sys Path: {sys.path}")
-    logger.error(traceback.format_exc())
-    raise
-
-app = Flask(__name__)
+app = Flask(__name__, static_folder='../frontend')
+CORS(app)  # Enable CORS for all routes
 
 # Global error handler
 @app.errorhandler(Exception)
@@ -67,37 +64,207 @@ def handle_error(e):
         return jsonify(error=str(e)), e.code
     
     # Handle validation errors
-    if isinstance(e, ValidationError):
+    if isinstance(e, ValueError):
         return jsonify(error=str(e)), 400
     
     # Generic server error for unexpected exceptions
     return jsonify(error='Internal Server Error'), 500
 
-def assign_birth_time(selected_ascendant):
+@app.route('/')
+def serve_frontend():
     """
-    Assign estimated birth time based on selected ascendant.
-    
-    Args:
-        selected_ascendant (str): Selected ascendant sign
-    
-    Returns:
-        str: Estimated birth time range
+    Serve the main frontend application.
     """
-    ascendant_time_ranges = {
-        "Aries": "04:00 AM - 06:00 AM",
-        "Taurus": "06:00 AM - 08:00 AM",
-        "Gemini": "08:00 AM - 10:00 AM",
-        "Cancer": "10:00 AM - 12:00 PM",
-        "Leo": "12:00 PM - 02:00 PM",
-        "Virgo": "02:00 PM - 04:00 PM",
-        "Libra": "04:00 PM - 06:00 PM",
-        "Scorpio": "06:00 PM - 08:00 PM",
-        "Sagittarius": "08:00 PM - 10:00 PM",
-        "Capricorn": "10:00 PM - 12:00 AM",
-        "Aquarius": "12:00 AM - 02:00 AM",
-        "Pisces": "02:00 AM - 04:00 AM"
+    return send_from_directory(app.static_folder, 'index.html')
+
+@app.route('/get_ascendants', methods=['POST'])
+def ascendant_endpoint():
+    """
+    Endpoint to retrieve possible ascendant signs.
+    
+    Expected JSON payload:
+    {
+        "birth_date": "YYYY-MM-DD",
+        "birth_location": "City, Country"
     }
-    return ascendant_time_ranges.get(selected_ascendant, "Unknown Time Range")
+    """
+    try:
+        data = request.get_json()
+        
+        # Validate input
+        validate_birth_date(data.get('birth_date'))
+        validate_birth_location(data.get('birth_location'))
+        
+        # Calculate ascendants
+        result = get_possible_ascendants(
+            data['birth_date'], 
+            data['birth_location']
+        )
+        
+        logger.info(f"Ascendant calculation for {data['birth_date']} successful")
+        return jsonify(result), 200
+    
+    except ValueError as ve:
+        logger.error(f"Validation Error: {str(ve)}")
+        return jsonify({
+            "error": "Invalid input",
+            "details": str(ve)
+        }), 400
+    
+    except Exception as e:
+        logger.error(f"Unexpected error in ascendant calculation: {str(e)}")
+        return jsonify({
+            "error": "Calculation failed",
+            "details": "Unable to determine ascendant signs"
+        }), 500
+
+@app.route('/calculate_numerology', methods=['POST'])
+def numerology_endpoint():
+    """
+    Endpoint to calculate numerological insights.
+    
+    Expected JSON payload:
+    {
+        "birth_date": "YYYY-MM-DD"
+    }
+    """
+    try:
+        data = request.get_json()
+        
+        # Validate input
+        validate_birth_date(data.get('birth_date'))
+        
+        # Calculate numerology
+        result = calculate_numerology(data['birth_date'])
+        
+        logger.info(f"Numerology calculation for {data['birth_date']} successful")
+        return jsonify(result), 200
+    
+    except ValueError as ve:
+        logger.error(f"Validation Error: {str(ve)}")
+        return jsonify({
+            "error": "Invalid input",
+            "details": str(ve)
+        }), 400
+    
+    except Exception as e:
+        logger.error(f"Unexpected error in numerology calculation: {str(e)}")
+        return jsonify({
+            "error": "Calculation failed",
+            "details": "Unable to determine numerological insights"
+        }), 500
+
+@app.route('/calculate_human_design', methods=['POST'])
+def human_design_endpoint():
+    """
+    Endpoint to calculate Human Design type.
+    
+    Expected JSON payload:
+    {
+        "birth_date": "YYYY-MM-DD",
+        "birth_time": "HH:MM AM/PM",
+        "birth_location": "City, Country"
+    }
+    """
+    try:
+        data = request.get_json()
+        
+        # Validate input
+        validate_birth_date(data.get('birth_date'))
+        
+        # Optional parameters
+        birth_time = data.get('birth_time')
+        birth_location = data.get('birth_location')
+        
+        # Validate optional parameters if provided
+        if birth_time:
+            validate_birth_time(birth_time)
+        
+        # Calculate Human Design
+        result = calculate_human_design(
+            data['birth_date'], 
+            birth_time, 
+            birth_location
+        )
+        
+        logger.info(f"Human Design calculation for {data['birth_date']} successful")
+        return jsonify(result), 200
+    
+    except ValueError as ve:
+        logger.error(f"Validation Error: {str(ve)}")
+        return jsonify({
+            "error": "Invalid input",
+            "details": str(ve)
+        }), 400
+    
+    except Exception as e:
+        logger.error(f"Unexpected error in Human Design calculation: {str(e)}")
+        return jsonify({
+            "error": "Calculation failed",
+            "details": "Unable to determine Human Design type"
+        }), 500
+
+@app.route('/calculate_compatibility', methods=['POST'])
+def compatibility_endpoint():
+    """
+    Endpoint to calculate comprehensive compatibility.
+    
+    Expected JSON payload:
+    {
+        "person1": {
+            "birth_date": "YYYY-MM-DD",
+            "birth_time": "HH:MM AM/PM",
+            "birth_location": "City, Country"
+        },
+        "person2": {
+            "birth_date": "YYYY-MM-DD",
+            "birth_time": "HH:MM AM/PM",
+            "birth_location": "City, Country"
+        }
+    }
+    """
+    try:
+        data = request.get_json()
+        
+        # Validate inputs
+        validate_birth_date(data['person1']['birth_date'])
+        validate_birth_date(data['person2']['birth_date'])
+        
+        # Optional parameter validations
+        if data['person1'].get('birth_time'):
+            validate_birth_time(data['person1']['birth_time'])
+        if data['person2'].get('birth_time'):
+            validate_birth_time(data['person2']['birth_time'])
+        
+        # Calculate compatibility
+        result = calculate_compatibility(
+            data['person1'], 
+            data['person2']
+        )
+        
+        logger.info(f"Compatibility calculation successful")
+        return jsonify(result), 200
+    
+    except ValueError as ve:
+        logger.error(f"Validation Error: {str(ve)}")
+        return jsonify({
+            "error": "Invalid input",
+            "details": str(ve)
+        }), 400
+    
+    except Exception as e:
+        logger.error(f"Unexpected error in compatibility calculation: {str(e)}")
+        return jsonify({
+            "error": "Calculation failed",
+            "details": "Unable to determine compatibility"
+        }), 500
+
+@app.route('/<path:path>')
+def serve_static(path):
+    """
+    Serve static files from the frontend directory.
+    """
+    return send_from_directory(app.static_folder, path)
 
 @app.route('/')
 def home():
@@ -111,133 +278,14 @@ def home():
     return jsonify({
         "message": "Pathlet API is running! Use the available endpoints.",
         "version": "1.0.0",
-        "endpoints": ["/get_ascendants", "/calculate_all"]
+        "endpoints": ["/get_ascendants", "/calculate_numerology", "/calculate_human_design", "/calculate_compatibility"]
     })
-
-@app.route('/get_ascendants', methods=['POST'])
-def get_ascendants():
-    """
-    Endpoint to estimate possible ascendant signs.
-    
-    Returns:
-        JSON response with possible ascendants or error
-    """
-    try:
-        # Validate request data
-        data = request.get_json()
-        validated_data = validate_request_data(data)
-        
-        # Get possible ascendants
-        ascendants = get_possible_ascendants(
-            validated_data['birth_date'], 
-            validated_data['birth_location']
-        )
-        
-        logger.info(f"Ascendants calculated: {ascendants}")
-        return jsonify({
-            "possible_ascendants": ascendants,
-            "instructions": "Review the listed Ascendants and choose the one that resonates most with you."
-        })
-    
-    except ValidationError as ve:
-        logger.error(f"Validation Error in get_ascendants: {ve}")
-        return jsonify({"error": str(ve)}), 400
-    except Exception as e:
-        logger.error(f"Error in get_ascendants: {e}")
-        logger.error(traceback.format_exc())
-        return jsonify({"error": "Failed to calculate ascendants"}), 500
-
-@app.route('/calculate_all', methods=['POST'])
-def calculate_all():
-    """
-    Comprehensive endpoint to calculate all insights.
-    
-    Returns:
-        JSON response with various insights or error
-    """
-    try:
-        # Validate request data
-        data = request.get_json()
-        validated_data = validate_request_data(data)
-        
-        # If no birth time and an ascendant is selected, estimate time
-        if not validated_data.get("birth_time") and "selected_ascendant" in validated_data:
-            validated_data["birth_time"] = assign_birth_time(validated_data["selected_ascendant"])
-        
-        human_design = calculate_human_design(
-            validated_data['birth_date'], 
-            validated_data['birth_time'],
-            validated_data['birth_location']
-        )
-        
-        numerology = calculate_numerology(
-            validated_data['birth_date']
-        )
-        
-        logger.info("All calculations completed successfully")
-        return jsonify({
-            "human_design": human_design,
-            "numerology": numerology,
-            "birth_time": validated_data['birth_time']
-        })
-    
-    except ValidationError as ve:
-        logger.error(f"Validation Error in calculate_all: {ve}")
-        return jsonify({"error": str(ve)}), 400
-    except Exception as e:
-        logger.error(f"Error in calculate_all: {e}")
-        logger.error(traceback.format_exc())
-        return jsonify({"error": "Failed to calculate insights"}), 500
 
 def handler(event, context):
     """
-    Comprehensive Vercel serverless function handler with robust error management
-    
-    Args:
-        event (dict): Serverless event data
-        context (dict): Serverless context
-    
-    Returns:
-        dict: Standardized response with error handling
+    Comprehensive Vercel serverless function handler
     """
-    try:
-        logger.info(f"Received serverless event: {event}")
-        
-        # Extract request details
-        method = event.get('httpMethod', 'GET')
-        path = event.get('path', '/')
-        body = event.get('body', '{}')
-        
-        # Simulate Flask request context
-        with app.request_context(environ={
-            'REQUEST_METHOD': method,
-            'PATH_INFO': path,
-            'wsgi.input': body
-        }):
-            # Dispatch request through Flask
-            response = app.full_dispatch_request()
-        
-        # Convert Flask response to Vercel response format
-        return {
-            'statusCode': response.status_code,
-            'body': response.get_data(as_text=True),
-            'headers': dict(response.headers)
-        }
-    
-    except Exception as e:
-        # Log full traceback for debugging
-        logger.error(f"Serverless Handler Error: {str(e)}")
-        logger.error(traceback.format_exc())
-        
-        return {
-            'statusCode': 500,
-            'body': json.dumps({
-                'error': 'Internal Server Error',
-                'details': str(e),
-                'traceback': traceback.format_exc()
-            }),
-            'headers': {'Content-Type': 'application/json'}
-        }
+    return app(event, context)
 
 if __name__ == '__main__':
     app.run(debug=True)

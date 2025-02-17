@@ -3,3 +3,20 @@ python-dotenv==1.0.0
 requests==2.31.0
 gunicorn==20.1.0
 werkzeug==2.3.6
+
+# Astronomical and Astrological Calculations
+ephem==4.1.4
+skyfield==1.45
+astral==2.2
+pytz==2023.3.post1
+
+# Scientific and Mathematical Calculations
+numpy==1.24.3
+scipy==1.10.1
+
+# Human Design and Numerology Support
+python-dateutil==2.8.2
+
+# Frontend Deployment
+flask-cors==3.0.10
+whitenoise==6.4.0
