@@ -19,16 +19,47 @@ def validate_birth_date(birth_date):
 
 def validate_birth_time(birth_time):
     """
-    Validate birth time format.
+    Validate birth time format with multiple input styles.
+    
+    Supports formats:
+    - HH:MM AM/PM (12-hour)
+    - HH:MM (24-hour)
+    - HH:MM:SS
     
     Args:
-        birth_time (str): Time of birth in HH:MM AM/PM format
+        birth_time (str): Time of birth 
     
     Returns:
-        bool: Whether the birth time is valid
+        str: Standardized time format or raises ValueError
     """
-    time_pattern = r'^(0[1-9]|1[0-2]):[0-5][0-9] (AM|PM)$'
-    return bool(re.match(time_pattern, birth_time))
+    if not birth_time:
+        return ""  # Allow empty time
+    
+    # Remove any whitespace
+    birth_time = birth_time.strip()
+    
+    # Patterns to match different time formats
+    time_patterns = [
+        r'^(0[1-9]|1[0-2]):[0-5][0-9] (AM|PM)$',  # 12-hour with AM/PM
+        r'^([01][0-9]|2[0-3]):[0-5][0-9]$',       # 24-hour
+        r'^([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$'  # With seconds
+    ]
+    
+    for pattern in time_patterns:
+        if re.match(pattern, birth_time):
+            return birth_time
+    
+    # If no match, try to parse and standardize
+    try:
+        # Try parsing with multiple formats
+        parsed_time = datetime.strptime(birth_time, '%I:%M %p')
+        return parsed_time.strftime('%I:%M %p')
+    except ValueError:
+        try:
+            parsed_time = datetime.strptime(birth_time, '%H:%M')
+            return parsed_time.strftime('%H:%M')
+        except ValueError:
+            raise ValueError("Invalid birth time format. Use HH:MM, HH:MM AM/PM")
 
 def validate_birth_location(location):
     """
@@ -52,26 +83,26 @@ def validate_request_data(data):
     Returns:
         tuple: (is_valid, error_message)
     """
-    if not data:
-        return False, "No data provided"
+    if not isinstance(data, dict):
+        return False, "Invalid request data format"
     
-    birth_date = data.get('birth_date')
-    birth_time = data.get('birth_time', '')
-    birth_location = data.get('birth_location')
-    
-    if not birth_date:
-        return False, "Birth date is required"
-    
+    # Birth date validation
+    birth_date = data.get('birth_date', '')
     if not validate_birth_date(birth_date):
-        return False, "Invalid birth date format. Use YYYY-MM-DD"
+        return False, f"Invalid birth date: {birth_date}. Use YYYY-MM-DD format"
     
-    if birth_time and not validate_birth_time(birth_time):
-        return False, "Invalid birth time format. Use HH:MM AM/PM"
+    # Birth time validation (optional)
+    birth_time = data.get('birth_time', '')
+    if birth_time:
+        try:
+            validated_time = validate_birth_time(birth_time)
+            data['birth_time'] = validated_time
+        except ValueError as e:
+            return False, str(e)
     
-    if not birth_location:
-        return False, "Birth location is required"
-    
+    # Birth location validation
+    birth_location = data.get('birth_location', '')
     if not validate_birth_location(birth_location):
-        return False, "Invalid birth location"
+        return False, f"Invalid birth location: {birth_location}"
     
     return True, ""
