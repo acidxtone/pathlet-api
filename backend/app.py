@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from datetime import datetime
@@ -7,16 +8,15 @@ from services.hugging_face import get_possible_ascendants
 from services.numerology import calculate_numerology
 from services.human_design import calculate_human_design
 from utils.validators import validate_request_data
-from config.settings import Config
 
 app = Flask(__name__)
-app.config.from_object(Config)
+CORS(app)  # Enable CORS for all routes
 
 # Rate Limiting
 limiter = Limiter(
     app,
     key_func=get_remote_address,
-    default_limits=[f"{Config.REQUEST_LIMIT_PER_MINUTE} per minute"]
+    default_limits=["10 per minute"]
 )
 
 def assign_birth_time(selected_ascendant):
@@ -123,14 +123,12 @@ def calculate_all():
 @app.route('/healthz')
 def health_check():
     """
-    Render health check endpoint
-    Returns a 200 OK status to indicate the service is running
+    Health check endpoint for deployment monitoring
     """
     return jsonify({
         'status': 'healthy',
-        'message': 'Pathlet API is running',
         'timestamp': datetime.now().isoformat()
     }), 200
 
 if __name__ == '__main__':
-    app.run(debug=Config.DEBUG)
+    app.run(host='0.0.0.0', port=8000, debug=False)
