@@ -1,11 +1,14 @@
+# Core Dependencies
+setuptools==69.2.0
+wheel==0.43.0
+distlib==0.3.8
+
 # Core Web Framework
 flask==3.1.0
 flask-cors==3.0.10
 gunicorn==23.0.0
 werkzeug==3.0.1
 python-dotenv==1.0.1
-setuptools==69.2.0
-wheel==0.43.0
 
 # HTTP Requests and API
 requests==2.32.3

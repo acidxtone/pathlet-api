@@ -1,6 +1,6 @@
 {
     "version": 2,
-    "buildCommand": "cd frontend && npm install && npm run build",
+    "buildCommand": "pip install --upgrade pip setuptools wheel && cd frontend && npm install && npm run build",
     "outputDirectory": "frontend/build",
     "builds": [
         {
@@ -12,8 +12,9 @@
                 "includeFiles": [
                     "backend/**",
                     "requirements.txt",
-                    "combined_requirements.txt"
+                    "runtime.txt"
                 ],
+                "installCommand": "pip install --upgrade pip setuptools wheel && pip install -r requirements.txt",
                 "functions": {
                     "memory": 3008,
                     "maxDuration": 60
