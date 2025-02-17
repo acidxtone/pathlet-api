@@ -2,7 +2,19 @@ import React, { useState } from 'react';
 import styled, { ThemeProvider } from 'styled-components';
 import { PathletService } from './services/pathletService';
 
-const theme = {
+interface Theme {
+    colors: {
+        primary: string;
+        secondary: string;
+        background: string;
+        text: string;
+    };
+    fonts: {
+        main: string;
+    };
+}
+
+const theme: Theme = {
     colors: {
         primary: '#6A5ACD',
         secondary: '#7B68EE',
@@ -42,7 +54,7 @@ const InputGroup = styled.div`
         color: ${props => props.theme.colors.text};
     }
     
-    input {
+    input, select {
         width: 100%;
         padding: 0.75rem;
         border: 1px solid #E0E0E0;
@@ -71,16 +83,19 @@ const ResultContainer = styled.div`
     padding: 1rem;
 `;
 
+type CalculationType = 'ascendants' | 'numerology' | 'humanDesign';
+type ResultType = Record<string, any> | { error?: string };
+
 function App() {
-    const [birthDate, setBirthDate] = useState('');
-    const [birthTime, setBirthTime] = useState('');
-    const [birthLocation, setBirthLocation] = useState('');
-    const [result, setResult] = useState(null);
-    const [calculationType, setCalculationType] = useState('ascendants');
+    const [birthDate, setBirthDate] = useState<string>('');
+    const [birthTime, setBirthTime] = useState<string>('');
+    const [birthLocation, setBirthLocation] = useState<string>('');
+    const [result, setResult] = useState<ResultType | null>(null);
+    const [calculationType, setCalculationType] = useState<CalculationType>('ascendants');
 
     const handleCalculate = async () => {
         try {
-            let calculationResult;
+            let calculationResult: ResultType;
             switch(calculationType) {
                 case 'ascendants':
                     calculationResult = await PathletService.getAscendants(birthDate, birthLocation);
@@ -97,7 +112,7 @@ function App() {
             setResult(calculationResult);
         } catch (error) {
             console.error('Calculation Error:', error);
-            setResult({ error: error.message });
+            setResult({ error: error instanceof Error ? error.message : 'Unknown error' });
         }
     };
 
@@ -110,7 +125,7 @@ function App() {
                         <label>Calculation Type</label>
                         <select 
                             value={calculationType} 
-                            onChange={(e) => setCalculationType(e.target.value)}
+                            onChange={(e) => setCalculationType(e.target.value as CalculationType)}
                         >
                             <option value="ascendants">Ascendant Signs</option>
                             <option value="numerology">Numerology</option>
