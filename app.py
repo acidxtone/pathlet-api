@@ -76,6 +76,14 @@ def calculate_numerology(birth_date):
         "karmic_debt_number": karmic_debt_number
     }
 
+def calculate_astrology_career(birth_date, birth_time, birth_location):
+    prompt = f"Provide career guidance based on astrology for someone born on {birth_date} at {birth_time} in {birth_location}."
+    return {"career_guidance": query_hugging_face(prompt)}
+
+def calculate_astrology_growth(birth_date, birth_time, birth_location):
+    prompt = f"Provide personal growth insights based on astrology for someone born on {birth_date} at {birth_time} in {birth_location}."
+    return {"growth_insights": query_hugging_face(prompt)}
+
 def estimate_birth_time(data):
     birth_date = data.get("birth_date")
     location = data.get("birth_location")
@@ -117,15 +125,13 @@ def calculate_all():
     
     human_design = calculate_human_design(birth_date, birth_time, birth_location)
     numerology = calculate_numerology(birth_date)
-    astrology = calculate_astrology_purpose(birth_date, birth_time, birth_location)
-    career = calculate_astrology_career(birth_date, birth_time, birth_location)
+    astrology = calculate_astrology_career(birth_date, birth_time, birth_location)
     growth = calculate_astrology_growth(birth_date, birth_time, birth_location)
     
     return jsonify({
         "human_design": human_design,
         "numerology": numerology,
-        "astrology": astrology,
-        "career": career,
+        "career": astrology,
         "growth": growth,
         "birth_time": birth_time
     })
