@@ -48,12 +48,21 @@ def assign_birth_time(selected_ascendant):
 @app.route('/')
 def home():
     """
-    Home route to confirm API is running.
-    
-    Returns:
-        JSON response with welcome message
+    Root endpoint for Pathlet API
+    Provides basic information about the service
     """
-    return jsonify({"message": "Pathlet API is running! Use the available endpoints."})
+    return jsonify({
+        'service': 'Pathlet API',
+        'status': 'operational',
+        'version': '1.0.0',
+        'endpoints': [
+            '/api/ascendant',
+            '/api/numerology',
+            '/api/human-design',
+            '/healthz'
+        ],
+        'documentation': 'Contact support for API documentation'
+    }), 200
 
 @app.route('/get_ascendants', methods=['POST'])
 @limiter.limit("10 per minute")
