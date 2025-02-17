@@ -10,7 +10,7 @@
             }
         },
         {
-            "src": "frontend/dist/**",
+            "src": "frontend/index.html",
             "use": "@vercel/static"
         }
     ],
@@ -21,11 +21,11 @@
         },
         {
             "src": "/(.*)",
-            "dest": "frontend/dist/index.html"
+            "dest": "frontend/index.html"
         }
     ],
     "env": {
-        "HUGGING_FACE_API_KEY": "${HUGGING_FACE_API_KEY}"
+        "HUGGING_FACE_API_KEY": "@hugging_face_api_key"
     },
     "github": {
         "silent": true

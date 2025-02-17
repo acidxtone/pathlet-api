@@ -15,13 +15,22 @@ from backend.utils.validators import (
     validate_birth_time, 
     validate_birth_location
 )
+import dotenv
 
-# Enhanced logging configuration
+# Load environment variables
+dotenv.load_dotenv()
+
+# Configure logging
 logging.basicConfig(
     level=logging.INFO, 
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Verify critical environment variables
+HUGGING_FACE_API_KEY = os.getenv('HUGGING_FACE_API_KEY')
+if not HUGGING_FACE_API_KEY:
+    logger.critical("HUGGING_FACE_API_KEY is not set. API functionality may be limited.")
 
 # Comprehensive path debugging
 logger.info(f"Current Working Directory: {os.getcwd()}")
@@ -266,19 +275,23 @@ def serve_static(path):
     """
     return send_from_directory(app.static_folder, path)
 
-@app.route('/')
+@app.route('/home')
 def home():
     """
-    Home route to confirm API is running.
-    
-    Returns:
-        JSON response with welcome message
+    Home endpoint with system health check
     """
-    logger.info("Home route accessed")
     return jsonify({
-        "message": "Pathlet API is running! Use the available endpoints.",
-        "version": "1.0.0",
-        "endpoints": ["/get_ascendants", "/calculate_numerology", "/calculate_human_design", "/calculate_compatibility"]
+        "message": "Pathlet API is running!",
+        "version": "1.1.0",
+        "environment_check": {
+            "hugging_face_api_key": "Configured" if HUGGING_FACE_API_KEY else "Not Set"
+        },
+        "endpoints": [
+            "/get_ascendants", 
+            "/calculate_numerology", 
+            "/calculate_human_design", 
+            "/calculate_compatibility"
+        ]
     })
 
 def handler(event, context):
