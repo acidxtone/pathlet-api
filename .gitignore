@@ -35,11 +35,10 @@ htmlcov/
 .coverage
 
 <<<<<<< HEAD
-=======
+>>>>>>> 4de1b8df8333fdcf73616eefc38de624ab39ada8
 # Deployment
 *.pid
 
->>>>>>> 4de1b8df8333fdcf73616eefc38de624ab39ada8
 # OS Generated Files
 .DS_Store
 Thumbs.db
