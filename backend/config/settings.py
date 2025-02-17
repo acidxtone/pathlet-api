@@ -14,11 +14,19 @@ class Config:
     
     # Flask Configuration
     SECRET_KEY = os.getenv('SECRET_KEY', 'development_secret_key')
-    DEBUG = os.getenv('FLASK_DEBUG', 'True') == 'True'
+    DEBUG = os.getenv('FLASK_DEBUG', 'False') == 'True'
     
     # Rate Limiting
     REQUEST_LIMIT_PER_MINUTE = int(os.getenv('REQUEST_LIMIT_PER_MINUTE', 100))
     
+    # CORS Configuration
+    CORS_ORIGINS = [
+        'http://localhost:3000',  # Local frontend
+        'https://pathlet-api.vercel.app',  # Vercel production
+        'https://pathlet-frontend.vercel.app',  # Potential frontend deployment
+        'https://pathlet.vercel.app'  # Additional potential domain
+    ]
+
     # Logging Configuration
     LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
     LOG_FILE = os.getenv('LOG_FILE', 'pathlet.log')

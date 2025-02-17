@@ -1,5 +1,7 @@
 {
     "version": 2,
+    "buildCommand": "cd frontend && npm install && npm run build",
+    "outputDirectory": "frontend/build",
     "builds": [
         {
             "src": "api/index.py",
@@ -26,7 +28,8 @@
     ],
     "env": {
         "HUGGING_FACE_API_KEY": "@hugging_face_api_key",
-        "FLASK_ENV": "production"
+        "FLASK_ENV": "production",
+        "FLASK_DEBUG": "False"
     },
     "github": {
         "silent": true
