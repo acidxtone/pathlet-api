@@ -10,7 +10,7 @@
             }
         },
         {
-            "src": "frontend/index.html",
+            "src": "frontend/build/**",
             "use": "@vercel/static"
         }
     ],
@@ -21,11 +21,12 @@
         },
         {
             "src": "/(.*)",
-            "dest": "frontend/index.html"
+            "dest": "frontend/build/index.html"
         }
     ],
     "env": {
-        "HUGGING_FACE_API_KEY": "@hugging_face_api_key"
+        "HUGGING_FACE_API_KEY": "@hugging_face_api_key",
+        "FLASK_ENV": "production"
     },
     "github": {
         "silent": true
