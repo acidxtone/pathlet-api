@@ -1,7 +1,11 @@
 # Pathlet API
 
 ## Overview
-Pathlet is an advanced API that generates personalized insights based on Astrology, Numerology, and Human Design.
+Pathlet is an advanced API generating personalized insights using Astrology, Numerology, and Human Design.
+
+## Deployment Platforms
+- **Vercel**: Web API Hosting
+- **Hugging Face Spaces**: Alternative Deployment
 
 ## Features
 - Ascendant Sign Estimation
@@ -9,17 +13,22 @@ Pathlet is an advanced API that generates personalized insights based on Astrolo
 - Human Design Type Analysis
 
 ## Setup
+
+### Local Development
 1. Clone the repository
-2. Create a virtual environment
-3. Install dependencies: `pip install -r backend/requirements.txt`
-4. Set up environment variables in `.env`
+2. Install dependencies: `pip install -r requirements.txt`
+3. Set up environment variables
+4. Run the application: `python backend/app.py`
 
-## Running the API
-```bash
-python backend/app.py
-```
+### Deployment
+- **Vercel**: 
+  * Automatically deploys from GitHub
+  * Configure environment variables in Vercel dashboard
+- **Hugging Face Spaces**:
+  * Docker-based deployment
+  * Requires Hugging Face Spaces configuration
 
-## Endpoints
+## API Endpoints
 - `GET /`: Health check
 - `POST /get_ascendants`: Estimate possible ascendant signs
 - `POST /calculate_all`: Comprehensive personal insights
