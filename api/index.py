@@ -4,19 +4,45 @@ import traceback
 import logging
 import json
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Enhanced logging configuration
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
-# Add the backend directory to the Python path
-backend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'backend'))
-sys.path.insert(0, backend_path)
+# Comprehensive path debugging
+logger.info(f"Current Working Directory: {os.getcwd()}")
+logger.info(f"Python Path: {sys.path}")
+
+# Add the backend directory to the Python path with comprehensive logging
+try:
+    backend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'backend'))
+    logger.info(f"Attempting to add backend path: {backend_path}")
+    
+    if not os.path.exists(backend_path):
+        logger.error(f"Backend path does not exist: {backend_path}")
+    
+    sys.path.insert(0, backend_path)
+    logger.info(f"Updated Python Path: {sys.path}")
+except Exception as path_error:
+    logger.error(f"Path resolution error: {path_error}")
+    logger.error(traceback.format_exc())
 
 from flask import Flask, request, jsonify
-from backend.services.hugging_face import get_possible_ascendants
-from backend.services.numerology import calculate_numerology
-from backend.services.human_design import calculate_human_design
-from backend.utils.validators import validate_request_data
+
+# Wrap import in try-except for detailed error tracking
+try:
+    from backend.services.hugging_face import get_possible_ascendants
+    from backend.services.numerology import calculate_numerology
+    from backend.services.human_design import calculate_human_design
+    from backend.utils.validators import validate_request_data
+    logger.info("Successfully imported backend modules")
+except ImportError as import_error:
+    logger.error(f"Import Error: {import_error}")
+    logger.error(f"Sys Path: {sys.path}")
+    logger.error(traceback.format_exc())
+    raise
 
 app = Flask(__name__)
 
