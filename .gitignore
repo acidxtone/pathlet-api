@@ -9,11 +9,14 @@ venv/
 .venv/
 ENV/
 
+<<<<<<< HEAD
 # Deployment Files to KEEP
 !vercel.json
 !Dockerfile
 !requirements.txt
 
+=======
+>>>>>>> 4de1b8df8333fdcf73616eefc38de624ab39ada8
 # Environment Variables
 .env
 backend/.env
@@ -31,6 +34,12 @@ logs/
 htmlcov/
 .coverage
 
+<<<<<<< HEAD
+=======
+# Deployment
+*.pid
+
+>>>>>>> 4de1b8df8333fdcf73616eefc38de624ab39ada8
 # OS Generated Files
 .DS_Store
 Thumbs.db
