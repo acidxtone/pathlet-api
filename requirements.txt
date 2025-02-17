@@ -1,69 +1,30 @@
-# Build and Packaging Tools
+# Core Build Tools
 setuptools==69.2.0
 wheel==0.43.0
 packaging==24.0
-build==1.1.1
-distlib==0.3.8
-
-# Core Dependencies for Python 3.12 Compatibility
-importlib-metadata==7.1.0
-importlib-resources==6.3.0
-setuptools-scm==8.0.4
 
 # Core Web Framework
 flask==3.1.0
 flask-cors==3.0.10
-flask-limiter==3.5.0
 gunicorn==23.0.0
-werkzeug==3.0.1
 python-dotenv==1.0.1
 
-# HTTP Requests and API
-requests==2.32.3
-uvicorn==0.34.0
-
-# Astronomical and Astrological Calculations
-ephem==4.1.4
-skyfield==1.45
-astral==2.2
-pytz==2023.3.post1
-
-# Scientific and Mathematical Calculations
+# Scientific Computing
 numpy==1.24.3
 scipy==1.10.1
 pandas==2.0.1
 
-# Machine Learning and AI
+# Machine Learning
 torch==2.1.2
 transformers==4.41.2
-scikit-learn==1.2.2
-gensim==4.3.2
 
-# Human Design and Numerology Support
+# Deployment and Compatibility
+importlib-metadata==7.1.0
+typing-extensions==4.10.0
+
+# Optional Tools
+requests==2.32.3
 python-dateutil==2.8.2
-
-# Frontend Deployment
-whitenoise==6.4.0
 
 # Development and Testing
 pytest==8.3.4
-starlette==0.45.3
-
-# Security and Validation
-pydantic==2.6.1
-pydantic-core==2.29.0
-
-# Hugging Face Specific
-accelerate==0.27.2
-sentencepiece==0.1.99
-protobuf==4.25.3
-
-# Logging and Monitoring
-structlog==24.1.0
-
-# Optional: Additional AI/NLP Tools
-nltk==3.8.1
-spacy==3.7.4
-
-# Python 3.12 Compatibility Extras
-typing-extensions==4.10.0
