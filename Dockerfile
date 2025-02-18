@@ -10,17 +10,21 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy the current directory contents into the container at /app
-COPY . /app
+# Copy the requirements file into the container
+COPY requirements.txt .
 
-# Install any needed packages specified in requirements.txt
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Make port 8000 available to the world outside this container
-EXPOSE 8000
+# Copy the backend directory
+COPY backend/ ./backend/
 
-# Define environment variable
+# Set environment variables
 ENV FLASK_ENV=production
+ENV PYTHONPATH=/app
+
+# Expose the port the app runs on
+EXPOSE 8000
 
 # Run the application
 CMD ["gunicorn", "-b", "0.0.0.0:8000", "--workers", "4", "backend.app:app"]

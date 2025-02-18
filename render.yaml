@@ -1,27 +1,22 @@
 services:
   - type: web
-    name: pathlet-backend
-    env: python
-    buildCommand: |
-      python -m pip install --upgrade pip
-      pip install -r requirements.txt
-      pip install .
-    startCommand: gunicorn backend.app:app
+    name: pathlet-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    branch: main
+    buildCommand: docker build -t pathlet .
+    startCommand: docker run -p 8000:8000 pathlet
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.9.19
       - key: FLASK_ENV
         value: production
-      - key: HUGGING_FACE_API_KEY
-        sync: false
+    healthCheckPath: /healthz
+    plan: free
 
   - type: web
     name: pathlet-frontend
-    env: static
-    buildCommand: |
-      cd frontend
-      npm install
-      npm run build
+    runtime: static
+    buildCommand: cd frontend && npm run build
     staticPublishPath: frontend/build
     routes:
       - type: rewrite
@@ -30,7 +25,7 @@ services:
 
   - type: worker
     name: pathlet-background-tasks
-    env: python
+    runtime: python
     buildCommand: |
       python -m pip install --upgrade pip
       pip install -r requirements.txt

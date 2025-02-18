@@ -1,30 +1,9 @@
-# Core Build Tools
-setuptools==69.2.0
-wheel==0.43.0
-packaging==24.0
-
 # Core Web Framework
 flask==3.1.0
 flask-cors==3.0.10
 gunicorn==23.0.0
+
+# Deployment Utilities
+setuptools==69.2.0
+wheel==0.43.0
 python-dotenv==1.0.1
-
-# Scientific Computing
-numpy==1.24.3
-scipy==1.10.1
-pandas==2.0.1
-
-# Machine Learning
-torch==2.1.2
-transformers==4.41.2
-
-# Deployment and Compatibility
-importlib-metadata==7.1.0
-typing-extensions==4.10.0
-
-# Optional Tools
-requests==2.32.3
-python-dateutil==2.8.2
-
-# Development and Testing
-pytest==8.3.4
