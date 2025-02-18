@@ -1,9 +1,0 @@
-# Core Web Framework
-flask==3.1.0
-flask-cors==3.0.10
-gunicorn==23.0.0
-
-# Deployment Utilities
-setuptools==69.2.0
-wheel==0.43.0
-python-dotenv==1.0.1

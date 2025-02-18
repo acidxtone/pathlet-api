@@ -1,0 +1,10 @@
+{
+  "files": {
+    "main.js": "/pathlet-api/static/js/main.e9a77a50.js",
+    "index.html": "/pathlet-api/index.html",
+    "main.e9a77a50.js.map": "/pathlet-api/static/js/main.e9a77a50.js.map"
+  },
+  "entrypoints": [
+    "static/js/main.e9a77a50.js"
+  ]
+}
