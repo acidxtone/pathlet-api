@@ -1,41 +1,43 @@
 # Pathlet Frontend
 
 ## Overview
-Modern, responsive React frontend for the Pathlet Personal Insights API.
+Pathlet is a personal insights web application that provides advanced astrological, numerological, and human design calculations.
 
 ## Features
-- Ascendant Sign Calculation
-- Numerology Insights
-- Human Design Type Determination
-- Responsive Design
-- Modern UI/UX
+- Ascendant Sign Calculator
+- Numerology Calculator
+- Human Design Calculator
+- Responsive and modern UI
+- Easy-to-use form interface
 
 ## Technologies
-- React 18
-- Styled Components
-- Axios for API Calls
-- React Router
+- React
+- TypeScript
+- Material-UI
+- Axios
+- React Hook Form
 
-## Setup
-1. Install dependencies
-```bash
-npm install
-```
+## Getting Started
 
-2. Set API URL
-```bash
-export REACT_APP_API_URL=https://your-api-endpoint.com
-```
+### Prerequisites
+- Node.js (v14 or later)
+- npm
 
-3. Run Development Server
-```bash
-npm start
-```
-
-## Build
-```bash
-npm run build
-```
+### Installation
+1. Clone the repository
+2. Navigate to the frontend directory
+3. Run `npm install`
+4. Run `npm start` for development
+5. Run `npm run build` for production build
 
 ## Deployment
-Configured for easy deployment on Vercel or Netlify.
+Deployed on GitHub Pages: https://acidxtone.github.io/pathlet-api
+
+## API Integration
+Connects to Pathlet backend API hosted on Render.com
+
+## Contributing
+Please read CONTRIBUTING.md for details on our code of conduct and the process for submitting pull requests.
+
+## License
+This project is licensed under the MIT License - see the LICENSE.md file for details

@@ -1,175 +1,171 @@
 import React, { useState } from 'react';
-import styled, { ThemeProvider } from 'styled-components';
-import { PathletService } from './services/pathletService';
+import { 
+  ThemeProvider, 
+  createTheme, 
+  CssBaseline, 
+  Container, 
+  Paper, 
+  Typography, 
+  TextField, 
+  Button, 
+  Grid, 
+  Box,
+  Tabs,
+  Tab
+} from '@mui/material';
+import { useForm, Controller } from 'react-hook-form';
+import { PathletAPI, BirthData, ApiResponse } from './services/api';
 
-interface Theme {
-    colors: {
-        primary: string;
-        secondary: string;
-        background: string;
-        text: string;
-    };
-    fonts: {
-        main: string;
-    };
-}
-
-const theme: Theme = {
-    colors: {
-        primary: '#6A5ACD',
-        secondary: '#7B68EE',
-        background: '#F4F4F8',
-        text: '#333333'
+const theme = createTheme({
+  palette: {
+    mode: 'dark',
+    primary: {
+      main: '#7E57C2', // Deep Purple
     },
-    fonts: {
-        main: "'Inter', sans-serif"
+    background: {
+      default: '#121212',
+      paper: '#1E1E1E'
     }
+  },
+  typography: {
+    fontFamily: 'Poppins, Arial, sans-serif'
+  }
+});
+
+const App: React.FC = () => {
+  const [results, setResults] = useState<ApiResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
+  const { control, handleSubmit, reset } = useForm<BirthData>();
+
+  const onSubmit = async (data: BirthData) => {
+    setLoading(true);
+    try {
+      const insights = await PathletAPI.calculateAll(data);
+      setResults(insights);
+    } catch (error) {
+      console.error('Error fetching insights:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
+    reset(); // Reset form when changing tabs
+    setResults(null);
+  };
+
+  const renderInsightSection = (title: string, data: any) => (
+    <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+      <Typography variant="h6">{title}</Typography>
+      <pre>{JSON.stringify(data, null, 2)}</pre>
+    </Paper>
+  );
+
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Container maxWidth="md">
+        <Paper elevation={3} sx={{ p: 4, mt: 4 }}>
+          <Typography variant="h4" gutterBottom>
+            Pathlet Personal Insights
+          </Typography>
+
+          <Tabs 
+            value={activeTab} 
+            onChange={handleTabChange} 
+            variant="fullWidth"
+            sx={{ mb: 3 }}
+          >
+            <Tab label="Ascendant" />
+            <Tab label="Numerology" />
+            <Tab label="Human Design" />
+          </Tabs>
+
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <Controller
+                  name="birth_date"
+                  control={control}
+                  rules={{ required: 'Birth date is required' }}
+                  render={({ field, fieldState: { error } }) => (
+                    <TextField
+                      {...field}
+                      type="date"
+                      label="Birth Date"
+                      fullWidth
+                      variant="outlined"
+                      InputLabelProps={{ shrink: true }}
+                      error={!!error}
+                      helperText={error?.message}
+                    />
+                  )}
+                />
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <Controller
+                  name="birth_time"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      type="time"
+                      label="Birth Time (Optional)"
+                      fullWidth
+                      variant="outlined"
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  )}
+                />
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <Controller
+                  name="birth_location"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      label="Birth Location (Optional)"
+                      fullWidth
+                      variant="outlined"
+                    />
+                  )}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <Button 
+                  type="submit" 
+                  variant="contained" 
+                  color="primary" 
+                  fullWidth
+                  disabled={loading}
+                >
+                  {loading ? 'Calculating...' : 'Get My Insights'}
+                </Button>
+              </Grid>
+            </Grid>
+          </form>
+
+          {results && (
+            <Box mt={4}>
+              <Typography variant="h5" gutterBottom>
+                Your Insights
+              </Typography>
+              
+              {activeTab === 0 && renderInsightSection('Ascendant', results.ascendant)}
+              {activeTab === 1 && renderInsightSection('Numerology', results.numerology)}
+              {activeTab === 2 && renderInsightSection('Human Design', results.human_design)}
+            </Box>
+          )}
+        </Paper>
+      </Container>
+    </ThemeProvider>
+  );
 };
-
-const AppContainer = styled.div`
-    font-family: ${props => props.theme.fonts.main};
-    background-color: ${props => props.theme.colors.background};
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 2rem;
-`;
-
-const FormContainer = styled.div`
-    background-color: white;
-    border-radius: 12px;
-    padding: 2rem;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    width: 100%;
-    max-width: 500px;
-`;
-
-const InputGroup = styled.div`
-    margin-bottom: 1rem;
-    
-    label {
-        display: block;
-        margin-bottom: 0.5rem;
-        color: ${props => props.theme.colors.text};
-    }
-    
-    input, select {
-        width: 100%;
-        padding: 0.75rem;
-        border: 1px solid #E0E0E0;
-        border-radius: 8px;
-    }
-`;
-
-const Button = styled.button`
-    background-color: ${props => props.theme.colors.primary};
-    color: white;
-    border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    
-    &:hover {
-        background-color: ${props => props.theme.colors.secondary};
-    }
-`;
-
-const ResultContainer = styled.div`
-    margin-top: 1rem;
-    background-color: #F9F9FC;
-    border-radius: 8px;
-    padding: 1rem;
-`;
-
-type CalculationType = 'ascendants' | 'numerology' | 'humanDesign';
-type ResultType = Record<string, any> | { error?: string };
-
-function App() {
-    const [birthDate, setBirthDate] = useState<string>('');
-    const [birthTime, setBirthTime] = useState<string>('');
-    const [birthLocation, setBirthLocation] = useState<string>('');
-    const [result, setResult] = useState<ResultType | null>(null);
-    const [calculationType, setCalculationType] = useState<CalculationType>('ascendants');
-
-    const handleCalculate = async () => {
-        try {
-            let calculationResult: ResultType;
-            switch(calculationType) {
-                case 'ascendants':
-                    calculationResult = await PathletService.getAscendants(birthDate, birthLocation);
-                    break;
-                case 'numerology':
-                    calculationResult = await PathletService.calculateNumerology(birthDate);
-                    break;
-                case 'humanDesign':
-                    calculationResult = await PathletService.calculateHumanDesign(birthDate, birthTime, birthLocation);
-                    break;
-                default:
-                    throw new Error('Invalid calculation type');
-            }
-            setResult(calculationResult);
-        } catch (error) {
-            console.error('Calculation Error:', error);
-            setResult({ error: error instanceof Error ? error.message : 'Unknown error' });
-        }
-    };
-
-    return (
-        <ThemeProvider theme={theme}>
-            <AppContainer>
-                <FormContainer>
-                    <h1>Pathlet Insights</h1>
-                    <InputGroup>
-                        <label>Calculation Type</label>
-                        <select 
-                            value={calculationType} 
-                            onChange={(e) => setCalculationType(e.target.value as CalculationType)}
-                        >
-                            <option value="ascendants">Ascendant Signs</option>
-                            <option value="numerology">Numerology</option>
-                            <option value="humanDesign">Human Design</option>
-                        </select>
-                    </InputGroup>
-                    <InputGroup>
-                        <label>Birth Date</label>
-                        <input 
-                            type="date" 
-                            value={birthDate} 
-                            onChange={(e) => setBirthDate(e.target.value)} 
-                        />
-                    </InputGroup>
-                    {calculationType === 'humanDesign' && (
-                        <InputGroup>
-                            <label>Birth Time</label>
-                            <input 
-                                type="time" 
-                                value={birthTime} 
-                                onChange={(e) => setBirthTime(e.target.value)} 
-                            />
-                        </InputGroup>
-                    )}
-                    <InputGroup>
-                        <label>Birth Location</label>
-                        <input 
-                            type="text" 
-                            value={birthLocation} 
-                            onChange={(e) => setBirthLocation(e.target.value)} 
-                            placeholder="City, Country"
-                        />
-                    </InputGroup>
-                    <Button onClick={handleCalculate}>Calculate</Button>
-                    
-                    {result && (
-                        <ResultContainer>
-                            <pre>{JSON.stringify(result, null, 2)}</pre>
-                        </ResultContainer>
-                    )}
-                </FormContainer>
-            </AppContainer>
-        </ThemeProvider>
-    );
-}
 
 export default App;
