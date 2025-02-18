@@ -6,7 +6,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         'flask==3.1.0',
-        'flask-cors==3.0.10',
+        'flask-cors==4.0.2',
         'gunicorn==23.0.0',
         'setuptools==69.2.0',
         'wheel==0.43.0',
