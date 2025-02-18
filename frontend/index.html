@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pathlet - Unlock Your Personal Insights</title>
+    <script>
+        // GitHub Pages single page application redirect
+        (function(){
+            var redirect = sessionStorage.redirect;
+            delete sessionStorage.redirect;
+            if (redirect && redirect != location.href) {
+                history.replaceState(null, null, redirect);
+            }
+        })();
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -119,7 +129,7 @@
                 Discover the hidden depths of your personality through advanced astrological, 
                 numerological, and human design insights.
             </p>
-            <a href="#" class="cta-button">Coming Soon</a>
+            <a href="https://pathlet-api.onrender.com" class="cta-button">Explore Insights</a>
         </section>
 
         <section class="features">
@@ -141,5 +151,13 @@
             <p>&copy; 2025 Pathlet. All rights reserved.</p>
         </footer>
     </div>
+
+    <script>
+        // GitHub Pages 404.html redirect support
+        if (window.location.pathname.split('/').length > 2) {
+            sessionStorage.redirect = window.location.pathname;
+            window.location.href = '/';
+        }
+    </script>
 </body>
 </html>
