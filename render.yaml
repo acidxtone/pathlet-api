@@ -5,8 +5,8 @@ services:
     dockerfilePath: ./Dockerfile
     dockerContext: .
     branch: main
-    buildCommand: docker build -t pathlet .
-    startCommand: docker run -p 8000:8000 pathlet
+    buildCommand: docker build -t pathlet-api .
+    startCommand: docker run -p 8000:8000 pathlet-api
     envVars:
       - key: FLASK_ENV
         value: production
@@ -14,20 +14,16 @@ services:
     plan: free
 
   - type: web
-    name: pathlet-frontend
+    name: pathlet-web
     runtime: static
     buildCommand: |
-      cd frontend
-      npm install
-      npm run build
-    staticPublishPath: frontend/build
+      mkdir -p build
+      cp frontend/index.html build/index.html
+    staticPublishPath: build
     routes:
       - type: rewrite
         source: /*
         destination: /index.html
-    envVars:
-      - key: REACT_APP_API_URL
-        value: https://pathlet-api.onrender.com
     plan: free
 
   - type: worker
